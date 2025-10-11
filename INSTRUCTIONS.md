@@ -13,7 +13,7 @@ In this project, you will implement the Forward+ and Clustered Deferred shading 
   - `stage/` includes camera controls, scene loading, and lights, where you will implement the clustering compute shader
 - `scenes/` contains the Sponza Atrium model used in the test scene
 
-## Running the code
+## Running the code 
 
 Follow these steps to install and view the project:
 - Clone this repository
