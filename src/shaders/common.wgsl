@@ -17,7 +17,6 @@ struct Cluster {
 
 // TODO-2: you may want to create a ClusterSet struct similar to LightSet
 struct ClusterSet {
-    numClusters: u32, 
     clusters: array<Cluster> 
 }
 

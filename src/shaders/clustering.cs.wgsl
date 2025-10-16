@@ -57,6 +57,8 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     let linear = globalIdx.x;
     if (linear >= N) { return; }
 
+    clusterSet.clusters[linear].numLights = linear;
+
     let cid = unflatten1D(linear);
     let cx_f  = f32(cid.x);
     let cy_f  = f32(cid.y);

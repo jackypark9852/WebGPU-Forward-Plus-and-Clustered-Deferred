@@ -25,7 +25,7 @@ export class Lights {
 
     // clusters storage 
     static readonly clusterCount = shaders.constants.clusterDimX * shaders.constants.clusterDimY * shaders.constants.clusterDimZ;
-    clustersArray = new Uint32Array(Lights.clusterCount * (shaders.constants.maxNumLightPerCluster + 1) + 1); // + 1 for numLights in each Cluster, +1 for numClusters
+    clustersArray = new Uint32Array(Lights.clusterCount * (shaders.constants.maxNumLightPerCluster + 1)); // + 1 for numLights in each Cluster, +1 for numClusters
     clusterSetStorageBuffer: GPUBuffer;
 
     timeUniformBuffer: GPUBuffer;
@@ -113,7 +113,7 @@ export class Lights {
             entries: [
                 { // clusters
                     binding: 0,
-                    visibility: GPUShaderStage.COMPUTE,
+                    visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
                     buffer: { type: "storage" }
                 },
                 { // camera

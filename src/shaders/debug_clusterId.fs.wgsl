@@ -1,5 +1,6 @@
 @group(${bindGroup_scene}) @binding(0) var<uniform> cameraUniforms: CameraUniforms;
 @group(${bindGroup_scene}) @binding(1) var<storage, read> lightSet: LightSet;
+@group(${bindGroup_scene}) @binding(2) var<storage, read> clusterSet: ClusterSet;
 @group(${bindGroup_material}) @binding(0) var diffuseTex: texture_2d<f32>;
 @group(${bindGroup_material}) @binding(1) var diffuseTexSampler: sampler;
 
@@ -40,6 +41,20 @@ fn depthToClipZ(d: f32) -> f32 {
     return d * 2.0 - 1.0;
 }
 
+fn hashFloat01(n: u32) -> f32 {
+  var x = n;
+  x ^= x >> 17; x *= 0xED5AD4BBu;
+  x ^= x >> 11; x *= 0xAC4C1B51u;
+  x ^= x >> 15; x *= 0x31848BABu;
+  x ^= x >> 14;
+  // 0..1
+  return f32(x) / f32(0xFFFFFFFFu);
+}
+
+fn hashColor3(n: u32) -> vec3f {
+  return vec3f(hashFloat01(n), hashFloat01(n ^ 0x68E31DA4u), hashFloat01(n ^ 0xB5297A4Du));
+}
+
 @fragment
 fn main(in: FragmentInput) -> @location(0) vec4f {
     let dims = CLUSTER_DIMS;
@@ -49,12 +64,15 @@ fn main(in: FragmentInput) -> @location(0) vec4f {
     // in.fragPos.xy = pixel coords; in.fragPos.z = post-projection depth [0,1]
     
     let cidLinear = getClusterIndex(in.fragPos.xyz, dims);
+    let numLights = clusterSet.clusters[cidLinear].numLights;
+    let col = hashColor3(numLights);
+    return vec4f(col, 1.0);
 
-    let cid = unflatten1D(cidLinear);
+    // let cid = unflatten1D(cidLinear);
 
-    let nx = (f32(cid.x) + 0.5) / max(1.0, f32(dims.x));
-    let ny = (f32(cid.y) + 0.5) / max(1.0, f32(dims.y));
-    let nz = (f32(cid.z) + 0.5) / max(1.0, f32(dims.z));
+    // let nx = (f32(cid.x) + 0.5) / max(1.0, f32(dims.x));
+    // let ny = (f32(cid.y) + 0.5) / max(1.0, f32(dims.y));
+    // let nz = (f32(cid.z) + 0.5) / max(1.0, f32(dims.z));
 
-    return vec4f(nx, ny, nz, 1.0);
+    // return vec4f(ny, ny, ny, 1.0);
 }
