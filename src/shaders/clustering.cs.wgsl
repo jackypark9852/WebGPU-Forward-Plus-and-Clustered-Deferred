@@ -1,5 +1,3 @@
-// TODO-2: implement the light clustering compute shader
-
 // ------------------------------------
 // Calculating cluster bounds:
 // ------------------------------------
@@ -21,3 +19,11 @@
 //         - Stop adding lights if the maximum number of lights is reached.
 
 //     - Store the number of lights assigned to this cluster.
+
+// CHECKITOUT: this is an example of a compute shader entry point function
+@compute
+@workgroup_size(${clusterWorkgroupSize})
+fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
+
+    // write clusters[idx * 256 + 0] = count; etc…
+}

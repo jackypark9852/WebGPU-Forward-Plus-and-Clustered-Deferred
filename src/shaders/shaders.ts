@@ -28,13 +28,29 @@ import clusteringComputeRaw from './clustering.cs.wgsl?raw';
 // Note that these are declared in a somewhat roundabout way because otherwise minification will drop variables
 // that are unused in host side code.
 export const constants = {
+    // rendering pass bindings
     bindGroup_scene: 0,
     bindGroup_model: 1,
     bindGroup_material: 2,
 
-    moveLightsWorkgroupSize: 128,
+    // move light compute pass bindings
+    bindGroup_moveLights: 0,
 
-    lightRadius: 2
+    // cluster compute pass bindings
+    bindGroup_cluster: 0, 
+
+    // compute work group sizes
+    moveLightsWorkgroupSize: 128,
+    clusterWorkgroupSize: 128,
+
+    // light settings
+    lightRadius: 2,
+
+    // cluster settings
+    clusterDimX: 16,  
+    clusterDimY: 9,
+    clusterDimZ: 32,  
+    maxNumLightPerCluster: 255 // so that it is 2^8 after + 1 (to store numLights)
 };
 
 // =================================

@@ -21,7 +21,6 @@ export class ForwardPlusRenderer extends renderer.Renderer {
         this.sceneUniformsBindGroupLayout = renderer.device.createBindGroupLayout({
             label: "scene uniforms bind group layout",
             entries: [
-                // TODO-1.2: add an entry for camera uniforms at binding 0, visible to only the vertex shader, and of type "uniform"
                 { // cameraUniform
                     binding: 0, 
                     visibility: GPUShaderStage.VERTEX, 
