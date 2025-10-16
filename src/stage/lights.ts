@@ -113,11 +113,16 @@ export class Lights {
             entries: [
                 { // clusters
                     binding: 0,
-                    visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
+                    visibility: GPUShaderStage.COMPUTE,
                     buffer: { type: "storage" }
                 },
+                { // lights
+                    binding: 1,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: { type: "read-only-storage" }
+                },
                 { // camera
-                    binding: 1, 
+                    binding: 2, 
                     visibility: GPUShaderStage.COMPUTE, 
                     buffer: {type: "uniform"}
                 }
@@ -134,6 +139,10 @@ export class Lights {
                 },
                 {
                     binding: 1, 
+                    resource: { buffer: this.lightSetStorageBuffer}
+                },
+                {
+                    binding: 2, 
                     resource: { buffer: this.camera.uniformsBuffer}
                 }
             ]

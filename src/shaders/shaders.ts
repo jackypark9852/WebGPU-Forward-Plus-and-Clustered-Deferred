@@ -7,7 +7,8 @@ import naiveFragRaw from './naive.fs.wgsl?raw';
 import debugNorFragRaw from './debug_nor.fs.wgsl?raw'; 
 import debugAlbedoFragRaw from './debug_albedo.fs.wgsl?raw'; 
 import debugDepthFragRaw from './debug_depth.fs.wgsl?raw'; 
-import debugClusterFragRaw from './debug_clusterId.fs.wgsl?raw'; 
+import debugClusterIdFragRaw from './debug_clusterId.fs.wgsl?raw'; 
+import debugClusterLightFragRaw from './debug_clusterLights.fs.wgsl?raw'
 
 import forwardPlusFragRaw from './forward_plus.fs.wgsl?raw';
 
@@ -47,7 +48,7 @@ export const constants = {
     // cluster settings
     clusterDimX: 16,  
     clusterDimY: 10,
-    clusterDimZ: 32,  
+    clusterDimZ: 64,  
     maxNumLightPerCluster: 255 // so that it is 2^8 after + 1 (to store numLights)
 };
 
@@ -73,7 +74,9 @@ export const debugNorFragSrc: string = processShaderRaw(debugNorFragRaw);
 
 export const debugDepthFragSrc: string = processShaderRaw(debugDepthFragRaw);
 
-export const debugClusterFragSrc: string = processShaderRaw(debugClusterFragRaw);
+export const debugClusterIdFragSrc: string = processShaderRaw(debugClusterIdFragRaw);
+
+export const debugClusterLightFragSrc: string = processShaderRaw(debugClusterLightFragRaw); 
 
 export const forwardPlusFragSrc: string = processShaderRaw(forwardPlusFragRaw);
 

@@ -1,7 +1,8 @@
 @group(${bindGroup_cluster}) @binding(0) var<storage, read_write> clusterSet : ClusterSet;
-@group(${bindGroup_cluster}) @binding(1) var<uniform> cameraUniforms: CameraUniforms;
+@group(${bindGroup_cluster}) @binding(1) var<storage, read> lightSet: LightSet;
+@group(${bindGroup_cluster}) @binding(2) var<uniform> cameraUniforms: CameraUniforms;
 
-// ------------------------------------
+// ------------------------------------ 
 // Calculating cluster bounds:
 // ------------------------------------
 // For each cluster (X, Y, Z):
@@ -46,6 +47,17 @@ fn sliceNearFarExp(zNear: f32, zFar: f32, sliceIdx: u32, sliceCount: u32) -> vec
   return vec2<f32>(zNearSlice, zFarSlice);
 }
 
+fn sqDistPointAABB(p: vec3f, bmin: vec3f, bmax: vec3f) -> f32 {
+  // Clamp point to the box, then measure the vector from the clamped point
+  let q  = clamp(p, bmin, bmax);
+  let v  = p - q;
+  return dot(v, v);
+}
+
+fn testSphereAABB(center: vec3f, radius: f32, aabbMin: vec3f, aabbMax: vec3f) -> bool {
+  let d2 = sqDistPointAABB(center, aabbMin, aabbMax);
+  return d2 <= (radius * radius);
+}
 
 @compute
 @workgroup_size(${clusterWorkgroupSize})
@@ -56,8 +68,6 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     // 1D assignment: one thread per cluster
     let linear = globalIdx.x;
     if (linear >= N) { return; }
-
-    clusterSet.clusters[linear].numLights = linear;
 
     let cid = unflatten1D(linear);
     let cx_f  = f32(cid.x);
@@ -92,4 +102,20 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     // find clusterAABB
     let minPointAABB = min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar));
     let maxPointAABB = max(max(minPointNear, minPointFar),max(maxPointNear, maxPointFar));
+
+    let r = f32(${lightRadius});
+    var numLights = 0u;
+    for (var lightIdx = 0u; lightIdx < lightSet.numLights; lightIdx++) {
+        let light = lightSet.lights[lightIdx];
+
+        // AABB - Sphere intersection test
+        if(testSphereAABB(light.pos, r, minPointAABB, maxPointAABB)) {
+            if (numLights < ${maxNumLightPerCluster}u) {
+                clusterSet.clusters[linear].lights[numLights] = lightIdx;
+                numLights = numLights + 1u;
+            }
+        }
+    }
+
+    clusterSet.clusters[linear].numLights = numLights;
 }
