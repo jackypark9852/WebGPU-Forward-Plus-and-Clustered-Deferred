@@ -1,12 +1,13 @@
 import { Mat4, mat4, Vec3, vec3 } from "wgpu-matrix";
 import { toRadians } from "../math_util";
 import { device, canvas, fovYDegrees, aspectRatio } from "../renderer";
+import * as shaders from '../shaders/shaders';
 
 class CameraUniforms {
-    readonly elemCount = 16; // 4x4 matrix 
+    readonly elemCount = 16; // 4x4 matrix (viewProj and invViewProj)
     readonly elemByteSize = 4; // float32
 
-    readonly buffer = new ArrayBuffer(this.elemCount * this.elemByteSize);
+    readonly buffer = new ArrayBuffer(2 * this.elemCount * this.elemByteSize);
     private readonly floatView = new Float32Array(this.buffer);
 
     set viewProjMat(mat: Float32Array) {
@@ -15,6 +16,15 @@ class CameraUniforms {
         }
     }
 
+    readonly invProjOffset = 16; 
+    set invProjMat(mat: Float32Array) {
+        for (let i = 0; i < this.elemCount; ++i) {
+            // BUG: reads from mat[16+i] but mat has only 16 elements (0..15)
+            this.floatView[this.invProjOffset + i] = mat[i];
+        }
+    }
+
+    
     // TODO-2: add extra functions to set values needed for light clustering here
 }
 
@@ -35,12 +45,16 @@ export class Camera {
     static readonly nearPlane = 0.1;
     static readonly farPlane = 1000;
 
+    static readonly invLog = 1.0 / Math.log(Camera.farPlane / Camera.nearPlane);
+    static readonly sliceA = shaders.constants.clusterDimZ* Camera.invLog;
+    static readonly sliceB = shaders.constants.clusterDimZ * Math.log(Camera.nearPlane) * Camera.invLog;
+
     keys: { [key: string]: boolean } = {};
 
     constructor () {
         this.uniformsBuffer = device.createBuffer({
             label: "cameraUniforms",
-            size: this.uniforms.buffer.byteLength + 16, // 16 for zNear/zFar and padding
+            size: this.uniforms.buffer.byteLength + 32, // 32 for zNear/zFar, width/height, sliceA/ sliceB and padding
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -138,13 +152,16 @@ export class Camera {
         this.uniforms.viewProjMat = viewProjMat; 
 
         // TODO-2: write to extra buffers needed for light clustering here
+        this.uniforms.invProjMat = mat4.invert(this.projMat);
 
         // TODO-1.1: upload `this.uniforms.buffer` (host side) to `this.uniformsBuffer` (device side)
         this.updateUniformsBuffer(); 
     }
 
     private updateUniformsBuffer() {
-        device.queue.writeBuffer(this.uniformsBuffer, 0, new Float32Array(this.uniforms.buffer));
-        device.queue.writeBuffer(this.uniformsBuffer, 64, new Float32Array([Camera.nearPlane, Camera.farPlane]));
+        device.queue.writeBuffer(this.uniformsBuffer, 0,  new Float32Array(this.uniforms.buffer));
+        device.queue.writeBuffer(this.uniformsBuffer, 128, new Float32Array([Camera.nearPlane, Camera.farPlane]));
+        device.queue.writeBuffer(this.uniformsBuffer, 136, new Float32Array([canvas.width, canvas.height]));
+        device.queue.writeBuffer(this.uniformsBuffer, 144, new Float32Array([Camera.sliceA, Camera.sliceB]));
     }
 }

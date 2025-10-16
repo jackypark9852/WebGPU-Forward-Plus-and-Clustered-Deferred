@@ -1,7 +1,4 @@
 // CHECKITOUT: this file loads all the shaders and preprocesses them with some common code
-
-import { Camera } from '../stage/camera';
-
 import commonRaw from './common.wgsl?raw';
 
 import naiveVertRaw from './naive.vs.wgsl?raw';
@@ -10,6 +7,7 @@ import naiveFragRaw from './naive.fs.wgsl?raw';
 import debugNorFragRaw from './debug_nor.fs.wgsl?raw'; 
 import debugAlbedoFragRaw from './debug_albedo.fs.wgsl?raw'; 
 import debugDepthFragRaw from './debug_depth.fs.wgsl?raw'; 
+import debugClusterFragRaw from './debug_clusterId.fs.wgsl?raw'; 
 
 import forwardPlusFragRaw from './forward_plus.fs.wgsl?raw';
 
@@ -74,6 +72,8 @@ export const debugAlbedoFragSrc: string = processShaderRaw(debugAlbedoFragRaw);
 export const debugNorFragSrc: string = processShaderRaw(debugNorFragRaw); 
 
 export const debugDepthFragSrc: string = processShaderRaw(debugDepthFragRaw);
+
+export const debugClusterFragSrc: string = processShaderRaw(debugClusterFragRaw);
 
 export const forwardPlusFragSrc: string = processShaderRaw(forwardPlusFragRaw);
 

@@ -24,9 +24,70 @@
 //     - Store the number of lights assigned to this cluster.
 
 // CHECKITOUT: this is an example of a compute shader entry point function
+
+fn projectPointToZ(p: vec3f, zPlane: f32) -> vec3f {
+  // t = zPlane / p.z
+  let t = zPlane / p.z;
+  return p * t;
+}
+
+// exponential slicing
+fn sliceNearFarExp(zNear: f32, zFar: f32, sliceIdx: u32, sliceCount: u32) -> vec2<f32> {
+  // guard against 0
+  let count = max(sliceCount, 1u);
+
+  let k = zFar / zNear;
+  let a = f32(sliceIdx)       / f32(count);
+  let b = f32(sliceIdx + 1u)  / f32(count);
+
+  // View-space z (negative forward)
+  let zNearSlice = -zNear * pow(k, a);
+  let zFarSlice  = -zNear * pow(k, b);
+  return vec2<f32>(zNearSlice, zFarSlice);
+}
+
+
 @compute
 @workgroup_size(${clusterWorkgroupSize})
 fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
+    let dims = CLUSTER_DIMS;
+    let N    = clusterCount();
 
-    // write clusters[idx * 256 + 0] = count; etc…
+    // 1D assignment: one thread per cluster
+    let linear = globalIdx.x;
+    if (linear >= N) { return; }
+
+    let cid = unflatten1D(linear);
+    let cx_f  = f32(cid.x);
+    let cy_f  = f32(cid.y);
+    let cz    = cid.z;
+
+    // screen / tiling
+    let screenWH   = vec2f(cameraUniforms.width, cameraUniforms.height);
+    let tileSizePx = screenWH / vec2f(f32(dims.x), f32(dims.y));
+    let zNear  = cameraUniforms.zNear;
+    let zFar   = cameraUniforms.zFar;
+
+    let eyePos = vec3f(0, 0, 0);
+
+    // find cluster min and max in screen space
+    let maxPoint_sS = vec4f(vec2f(cx_f + 1, cy_f + 1) * tileSizePx, -1.0, 1.0); // Top Right
+    let minPoint_sS = vec4f(vec2f(cx_f, cy_f) * tileSizePx, -1.0, 1.0); // Bottom left
+
+    // find min and max in view space
+    let maxPoint_vS = screenToView(maxPoint_sS.xy, -1, cameraUniforms.invProjMat, screenWH).xyz;
+    let minPoint_vS = screenToView(minPoint_sS.xy, -1, cameraUniforms.invProjMat, screenWH).xyz;
+
+    // tile z-near and z-far
+    let tileNearFar = sliceNearFarExp(zNear, zFar, cz, dims.z);
+
+    // find min/max points on tile near/far
+    let minPointNear = projectPointToZ(minPoint_vS, tileNearFar.x);
+    let minPointFar  = projectPointToZ(minPoint_vS, tileNearFar.y);
+    let maxPointNear = projectPointToZ(maxPoint_vS, tileNearFar.x);
+    let maxPointFar  = projectPointToZ(maxPoint_vS, tileNearFar.y);
+
+    // find clusterAABB
+    let minPointAABB = min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar));
+    let maxPointAABB = max(max(minPointNear, minPointFar),max(maxPointNear, maxPointFar));
 }

@@ -23,7 +23,7 @@ export class ForwardPlusRenderer extends renderer.Renderer {
             entries: [
                 { // cameraUniform
                     binding: 0, 
-                    visibility: GPUShaderStage.VERTEX, 
+                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, 
                     buffer: {type:'uniform'} 
                 }, 
                 { // lightSet
@@ -83,7 +83,7 @@ export class ForwardPlusRenderer extends renderer.Renderer {
             fragment: {
                 module: renderer.device.createShaderModule({
                     label: "naive frag shader",
-                    code: shaders.naiveFragSrc,
+                    code: shaders.debugClusterFragSrc,
                 }),
                 targets: [
                     {
