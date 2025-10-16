@@ -15,17 +15,27 @@ export class Lights {
 
     numLights = 500;
     static readonly maxNumLights = 5000;
-    static readonly numFloatsPerLight = 8; // vec3f is aligned at 16 byte boundaries
-
+    static readonly numFloatsPerLight = 8;
     static readonly lightIntensity = 0.1;
+
+    static readonly LIGHT_BYTES = 32;
+    static readonly LIGHTSET_HDR_BYTES = 16;
+    static readonly MAX = shaders.constants.maxNumLightPerCluster;
+    static readonly CLUSTER_STRIDE_BYTES = (1 /* numLights */ + 3 /* padding 8*/ + Lights.MAX ) * 4; // 16 + 4*MAX
+    static readonly numClusters = shaders.constants.clusterCount;
+
+    // Total sizes
+    static readonly lightSetSizeBytes =
+        Lights.LIGHTSET_HDR_BYTES + Lights.maxNumLights * Lights.LIGHT_BYTES;
+
+    static readonly clusterSetSizeBytes =
+        Lights.numClusters * Lights.CLUSTER_STRIDE_BYTES;
 
     // lights storage
     lightsArray = new Float32Array(Lights.maxNumLights * Lights.numFloatsPerLight);
     lightSetStorageBuffer: GPUBuffer;
 
     // clusters storage 
-    static readonly clusterCount = shaders.constants.clusterDimX * shaders.constants.clusterDimY * shaders.constants.clusterDimZ;
-    clustersArray = new Uint32Array(Lights.clusterCount * (shaders.constants.maxNumLightPerCluster + 1)); // + 1 for numLights in each Cluster, +1 for numClusters
     clusterSetStorageBuffer: GPUBuffer;
 
     timeUniformBuffer: GPUBuffer;
@@ -44,17 +54,17 @@ export class Lights {
 
         this.lightSetStorageBuffer = device.createBuffer({
             label: "lights",
-            size: 16 + this.lightsArray.byteLength, // 16 for numLights + padding
+            size: Lights.lightSetSizeBytes, // 16 for numLights + padding
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
         });
         this.populateLightsBuffer();
         this.updateLightSetUniformNumLights();
 
         this.clusterSetStorageBuffer = device.createBuffer({
-            label: "clusters", 
-            size: this.clustersArray.byteLength,
+            label: "clusters",
+            size: Lights.clusterSetSizeBytes,          // IMPORTANT: includes per-cluster padding
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
-        }); 
+        });
 
         this.timeUniformBuffer = device.createBuffer({
             label: "time uniform",
@@ -201,7 +211,7 @@ export class Lights {
         computePass.setPipeline(this.clusterComputePipeline);
         computePass.setBindGroup(shaders.constants.bindGroup_cluster, this.clusterComputeBindGroup); 
         const clusterWorkgroupCount = Math.ceil(
-            Lights.clusterCount / shaders.constants.clusterWorkgroupSize
+            Lights.numClusters / shaders.constants.clusterWorkgroupSize
         ); 
         computePass.dispatchWorkgroups(clusterWorkgroupCount);
 

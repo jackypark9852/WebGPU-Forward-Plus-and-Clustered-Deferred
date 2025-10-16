@@ -48,7 +48,6 @@ fn sliceNearFarExp(zNear: f32, zFar: f32, sliceIdx: u32, sliceCount: u32) -> vec
 }
 
 fn sqDistPointAABB(p: vec3f, bmin: vec3f, bmax: vec3f) -> f32 {
-  // Clamp point to the box, then measure the vector from the clamped point
   let q  = clamp(p, bmin, bmax);
   let v  = p - q;
   return dot(v, v);
@@ -105,11 +104,14 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
 
     let r = f32(${lightRadius});
     var numLights = 0u;
+
+    let viewMat = cameraUniforms.invProjMat * cameraUniforms.viewProjMat;
     for (var lightIdx = 0u; lightIdx < lightSet.numLights; lightIdx++) {
         let light = lightSet.lights[lightIdx];
+        let centerVS = (viewMat * vec4f(light.pos, 1.0)).xyz;
 
         // AABB - Sphere intersection test
-        if(testSphereAABB(light.pos, r, minPointAABB, maxPointAABB)) {
+        if(testSphereAABB(centerVS, r, minPointAABB, maxPointAABB)) {
             if (numLights < ${maxNumLightPerCluster}u) {
                 clusterSet.clusters[linear].lights[numLights] = lightIdx;
                 numLights = numLights + 1u;
