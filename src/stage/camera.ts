@@ -40,7 +40,7 @@ export class Camera {
     constructor () {
         this.uniformsBuffer = device.createBuffer({
             label: "cameraUniforms",
-            size: 16 + this.uniforms.buffer.byteLength, // 16 for numLights + padding
+            size: this.uniforms.buffer.byteLength + 16, // 16 for zNear/zFar and padding
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -145,5 +145,6 @@ export class Camera {
 
     private updateUniformsBuffer() {
         device.queue.writeBuffer(this.uniformsBuffer, 0, new Float32Array(this.uniforms.buffer));
+        device.queue.writeBuffer(this.uniformsBuffer, 64, new Float32Array([Camera.nearPlane, Camera.farPlane]));
     }
 }

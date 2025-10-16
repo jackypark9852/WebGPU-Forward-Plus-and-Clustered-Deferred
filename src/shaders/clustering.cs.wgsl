@@ -1,3 +1,6 @@
+@group(${bindGroup_cluster}) @binding(0) var<storage, read_write> clusterSet : ClusterSet;
+@group(${bindGroup_cluster}) @binding(1) var<uniform> cameraUniforms: CameraUniforms;
+
 // ------------------------------------
 // Calculating cluster bounds:
 // ------------------------------------
