@@ -46,7 +46,7 @@ export class Camera {
     sensitivity: number = 0.15;
 
     static readonly nearPlane = 0.1;
-    static readonly farPlane = 20;
+    static readonly farPlane = 1000;
 
     static readonly invLog = 1.0 / Math.log(Camera.farPlane / Camera.nearPlane);
     static readonly sliceA = shaders.constants.clusterDimZ * Camera.invLog;

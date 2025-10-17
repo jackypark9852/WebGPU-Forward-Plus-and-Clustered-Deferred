@@ -56,7 +56,7 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
         return;
     }
 
-    let timeScale = 999999.f; 
+    let timeScale = 9999.f; 
     let scaledTime = time / timeScale;
 
     let noise = perlin3(lightIdx, scaledTime);

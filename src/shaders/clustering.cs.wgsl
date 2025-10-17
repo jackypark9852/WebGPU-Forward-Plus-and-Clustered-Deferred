@@ -101,6 +101,7 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     let cid = unflatten1D(linear);
     let cx_f  = f32(cid.x);
     let cy_f  = f32(cid.y);
+    let cz_f  = f32(cid.z);
     let cz    = cid.z;
 
     // screen / tiling
@@ -118,13 +119,19 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     let minPoint_vS = screen2View(minPoint_sS, screenWH).xyz;
 
     // tile z-near and z-far
-    let tileNearFar = sliceNearFarExp(zNear, zFar, cz, dims.z);
+    // let tileNearFar = sliceNearFarExp(zNear, zFar, cz, dims.z);
+    let tileNear  = -zNear * pow(zFar/ zNear, cz_f/ f32(dims.z));
+    let tileFar   = -zNear * pow(zFar/ zNear, cz_f + 1) /f32(dims.z);
 
     // find min/max points on tile near/far
-    let minPointNear = minPoint_vS * (tileNearFar.x / minPoint_vS.z);
-    let minPointFar  = minPoint_vS * (tileNearFar.y / minPoint_vS.z);
-    let maxPointNear = maxPoint_vS * (tileNearFar.x / maxPoint_vS.z);
-    let maxPointFar  = maxPoint_vS * (tileNearFar.y / maxPoint_vS.z);
+    // let minPointNear = minPoint_vS * (tileNearFar.x / minPoint_vS.z);
+    // let minPointFar  = minPoint_vS * (tileNearFar.y / minPoint_vS.z);
+    // let maxPointNear = maxPoint_vS * (tileNearFar.x / maxPoint_vS.z);
+    // let maxPointFar  = maxPoint_vS * (tileNearFar.y / maxPoint_vS.z);
+    let minPointNear = minPoint_vS * (tileNear / minPoint_vS.z);
+    let minPointFar  = minPoint_vS * (tileFar / minPoint_vS.z);
+    let maxPointNear = maxPoint_vS * (tileNear / maxPoint_vS.z);
+    let maxPointFar  = maxPoint_vS * (tileFar / maxPoint_vS.z);
 
     // find clusterAABB
     let minPointAABB = min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar));
