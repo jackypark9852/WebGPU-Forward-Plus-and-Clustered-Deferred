@@ -114,7 +114,7 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     let minPointAABB = min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar));
     let maxPointAABB = max(max(minPointNear, minPointFar),max(maxPointNear, maxPointFar));
 
-    let r = f32(${lightRadius});
+    let r = 2.0; // light radius
     var numLights = 0u;
 
     let viewMat = cameraUniforms.viewMat;
