@@ -47,9 +47,9 @@ export const constants = {
 
     // cluster settings
     clusterDimX: 16,  
-    clusterDimY: 10,
+    clusterDimY: 8,
     clusterDimZ: 32,  
-    clusterCount: 5120,
+    clusterCount: 4096,
     maxNumLightPerCluster: 1024 // so that it is 2^8 after + 1 (to store numLights)
 };
 

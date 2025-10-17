@@ -64,15 +64,15 @@ fn main(in: FragmentInput) -> @location(0) vec4f {
     // in.fragPos.xy = pixel coords; in.fragPos.z = post-projection depth [0,1]
     
     let cidLinear = getClusterIndex(in.fragPos.xyz, dims);
-    let numLights = clusterSet.clusters[cidLinear].numLights;
-    let col = hashColor3(numLights);
-    return vec4f(col, 1.0);
+    // let numLights = clusterSet.clusters[cidLinear].numLights;
+    // let col = hashColor3(cidLinear);
+    // return vec4f(col, 1.0);
 
-    // let cid = unflatten1D(cidLinear);
+    let cid = unflatten1D(cidLinear);
 
-    // let nx = (f32(cid.x) + 0.5) / max(1.0, f32(dims.x));
-    // let ny = (f32(cid.y) + 0.5) / max(1.0, f32(dims.y));
-    // let nz = (f32(cid.z) + 0.5) / max(1.0, f32(dims.z));
+    let nx = (f32(cid.x) + 0.5) / max(1.0, f32(dims.x));
+    let ny = (f32(cid.y) + 0.5) / max(1.0, f32(dims.y));
+    let nz = (f32(cid.z) + 0.5) / max(1.0, f32(dims.z));
 
-    // return vec4f(ny, ny, ny, 1.0);
+    return vec4f(nx, ny, nz, 1.0);
 }

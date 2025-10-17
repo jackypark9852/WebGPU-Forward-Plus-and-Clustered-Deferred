@@ -7,7 +7,7 @@ class CameraUniforms {
     readonly elemCount = 16; // 4x4 matrix (viewProj and invViewProj)
     readonly elemByteSize = 4; // float32
 
-    readonly buffer = new ArrayBuffer(2 * this.elemCount * this.elemByteSize);
+    readonly buffer = new ArrayBuffer(3 * this.elemCount * this.elemByteSize);
     private readonly floatView = new Float32Array(this.buffer);
 
     set viewProjMat(mat: Float32Array) {
@@ -16,7 +16,7 @@ class CameraUniforms {
         }
     }
 
-    readonly invProjOffset = 16; 
+    readonly invProjOffset = 64; 
     set invProjMat(mat: Float32Array) {
         for (let i = 0; i < this.elemCount; ++i) {
             // BUG: reads from mat[16+i] but mat has only 16 elements (0..15)
@@ -24,8 +24,12 @@ class CameraUniforms {
         }
     }
 
-    
-    // TODO-2: add extra functions to set values needed for light clustering here
+    readonly viewOffset = 128;
+    set viewMat(mat: Float32Array) {
+        for (let i = 0; i < this.elemCount; ++i) {
+            this.floatView[this.viewOffset + i] = mat[i];
+        }
+    }
 }
 
 export class Camera {
@@ -43,10 +47,10 @@ export class Camera {
     sensitivity: number = 0.15;
 
     static readonly nearPlane = 0.1;
-    static readonly farPlane = 1000;
+    static readonly farPlane = 20;
 
     static readonly invLog = 1.0 / Math.log(Camera.farPlane / Camera.nearPlane);
-    static readonly sliceA = shaders.constants.clusterDimZ* Camera.invLog;
+    static readonly sliceA = shaders.constants.clusterDimZ * Camera.invLog;
     static readonly sliceB = shaders.constants.clusterDimZ * Math.log(Camera.nearPlane) * Camera.invLog;
 
     keys: { [key: string]: boolean } = {};
@@ -153,6 +157,7 @@ export class Camera {
 
         // TODO-2: write to extra buffers needed for light clustering here
         this.uniforms.invProjMat = mat4.invert(this.projMat);
+        this.uniforms.viewMat = viewMat;
 
         // TODO-1.1: upload `this.uniforms.buffer` (host side) to `this.uniformsBuffer` (device side)
         this.updateUniformsBuffer(); 
@@ -160,8 +165,8 @@ export class Camera {
 
     private updateUniformsBuffer() {
         device.queue.writeBuffer(this.uniformsBuffer, 0,  new Float32Array(this.uniforms.buffer));
-        device.queue.writeBuffer(this.uniformsBuffer, 128, new Float32Array([Camera.nearPlane, Camera.farPlane]));
-        device.queue.writeBuffer(this.uniformsBuffer, 136, new Float32Array([canvas.width, canvas.height]));
-        device.queue.writeBuffer(this.uniformsBuffer, 144, new Float32Array([Camera.sliceA, Camera.sliceB]));
+        device.queue.writeBuffer(this.uniformsBuffer, 192, new Float32Array([Camera.nearPlane, Camera.farPlane]));
+        device.queue.writeBuffer(this.uniformsBuffer, 200, new Float32Array([canvas.width, canvas.height]));
+        device.queue.writeBuffer(this.uniformsBuffer, 208, new Float32Array([Camera.sliceA, Camera.sliceB]));
     }
 }

@@ -71,23 +71,22 @@ fn heatmap_gyr(t_raw: f32) -> vec3f {
 
 @fragment
 fn main(in: FragmentInput) -> @location(0) vec4f {
-    let dims = CLUSTER_DIMS;
+  let dims = CLUSTER_DIMS;
 
-    let cidLinear = getClusterIndex(in.fragPos.xyz, dims);
-    let numLights = clusterSet.clusters[cidLinear].numLights;
+  let diffuseColor = textureSample(diffuseTex, diffuseTexSampler, in.uv);
+  if (diffuseColor.a < 0.5f) {
+      discard;
+  }
 
-    let diffuseColor = textureSample(diffuseTex, diffuseTexSampler, in.uv);
-    if (diffuseColor.a < 0.5f) {
-        discard;
-    }
+  let cidLinear = getClusterIndex(in.fragPos.xyz, dims);
+  let numLights = clusterSet.clusters[cidLinear].numLights;
+  var totalLightContrib = vec3f(0, 0, 0);
+  for (var i = 0u; i < numLights; i++) {
+      let lightIdx = clusterSet.clusters[cidLinear].lights[i];
+      let light = lightSet.lights[lightIdx];
+      totalLightContrib += calculateLightContrib(light, in.pos, normalize(in.nor));
+  }
 
-    var totalLightContrib = vec3f(0, 0, 0);
-    for (var i = 0u; i < numLights; i++) {
-        let lightIdx = clusterSet.clusters[cidLinear].lights[i];
-        let light = lightSet.lights[lightIdx];
-        totalLightContrib += calculateLightContrib(light, in.pos, normalize(in.nor));
-    }
-
-    var finalColor = diffuseColor.rgb * totalLightContrib;
-    return vec4(finalColor, 1);
+  var finalColor = diffuseColor.rgb * totalLightContrib;
+  return vec4(finalColor, 1);
 }

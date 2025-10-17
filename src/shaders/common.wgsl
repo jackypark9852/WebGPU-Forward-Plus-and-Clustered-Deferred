@@ -25,6 +25,7 @@ struct ClusterSet {
 struct CameraUniforms {
     viewProjMat: mat4x4f,
     invProjMat: mat4x4f,
+    viewMat : mat4x4f,
     zNear: f32,
     zFar: f32,
     width: f32, 
@@ -82,8 +83,23 @@ fn screenToView(
   screenWH : vec2f
 ) -> vec3f {
   let tex  = screenXY / screenWH;
-  let ndc  = vec2f(tex.x * 2.0 - 1.0, (1.0 - tex.y) * 2.0 - 1.0);
-  let clip = vec4f(ndc, clipZ, 1.0);
+  let clip = vec4(vec2(tex.x, 1.0 - tex.y)* 2.0 - 1.0, clipZ, 1.0);
   let vH   = invProj * clip;
   return vH.xyz / vH.w;
 }
+
+// vec4 screen2View(vec4 screen){
+//     //Convert to NDC
+//     vec2 texCoord = screen.xy / screenDimensions.xy;
+
+//     //Convert to clipSpace
+//     vec4 clip = vec4(vec2(texCoord.x, 1.0 - texCoord.y)* 2.0 - 1.0, screen.z, screen.w);
+
+//     //View space transform
+//     vec4 view = inverseProjection * clip;
+
+//     //Perspective projection
+//     view = view / view.w;
+
+//     return view;
+// }

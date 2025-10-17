@@ -32,6 +32,19 @@ fn projectPointToZ(p: vec3f, zPlane: f32) -> vec3f {
   return p * t;
 }
 
+fn intersectZ(eye: vec3f, cornerVS: vec3f, zPlane: f32) -> vec3f {
+  let ab = cornerVS - eye;                  // ray from eye to near-corner
+  let denom = ab.z;                         // dot((0,0,1), ab)
+  // guard parallel rays (should be rare, but robust code saves you from NaNs)
+  if (abs(denom) < 1e-8) {
+    return cornerVS;                        // fallback: use the corner itself
+  }
+  var t = (zPlane - eye.z) / denom;         // zPlane is negative in view space
+  t = max(t, 0.0);                          // never walk behind the eye
+  return eye + t * ab;
+}
+
+
 // exponential slicing
 fn sliceNearFarExp(zNear: f32, zFar: f32, sliceIdx: u32, sliceCount: u32) -> vec2<f32> {
   // guard against 0
@@ -54,8 +67,9 @@ fn sqDistPointAABB(p: vec3f, bmin: vec3f, bmax: vec3f) -> f32 {
 }
 
 fn testSphereAABB(center: vec3f, radius: f32, aabbMin: vec3f, aabbMax: vec3f) -> bool {
-  let d2 = sqDistPointAABB(center, aabbMin, aabbMax);
-  return d2 <= (radius * radius);
+  let fist = max(vec3f(0, 0, 0), max(aabbMin - center, center - aabbMax));
+  let distSq = dot(fist, fist);
+  return distSq <= radius * radius;
 }
 
 @compute
@@ -79,8 +93,6 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     let zNear  = cameraUniforms.zNear;
     let zFar   = cameraUniforms.zFar;
 
-    let eyePos = vec3f(0, 0, 0);
-
     // find cluster min and max in screen space
     let maxPoint_sS = vec4f(vec2f(cx_f + 1, cy_f + 1) * tileSizePx, -1.0, 1.0); // Top Right
     let minPoint_sS = vec4f(vec2f(cx_f, cy_f) * tileSizePx, -1.0, 1.0); // Bottom left
@@ -93,10 +105,10 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     let tileNearFar = sliceNearFarExp(zNear, zFar, cz, dims.z);
 
     // find min/max points on tile near/far
-    let minPointNear = projectPointToZ(minPoint_vS, tileNearFar.x);
-    let minPointFar  = projectPointToZ(minPoint_vS, tileNearFar.y);
-    let maxPointNear = projectPointToZ(maxPoint_vS, tileNearFar.x);
-    let maxPointFar  = projectPointToZ(maxPoint_vS, tileNearFar.y);
+    let minPointNear = minPoint_vS * (tileNearFar.x / minPoint_vS.z);
+    let minPointFar  = minPoint_vS * (tileNearFar.y / minPoint_vS.z);
+    let maxPointNear = maxPoint_vS * (tileNearFar.x / maxPoint_vS.z);
+    let maxPointFar  = maxPoint_vS * (tileNearFar.y / maxPoint_vS.z);
 
     // find clusterAABB
     let minPointAABB = min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar));
@@ -105,7 +117,7 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     let r = f32(${lightRadius});
     var numLights = 0u;
 
-    let viewMat = cameraUniforms.invProjMat * cameraUniforms.viewProjMat;
+    let viewMat = cameraUniforms.viewMat;
     for (var lightIdx = 0u; lightIdx < lightSet.numLights; lightIdx++) {
         let light = lightSet.lights[lightIdx];
         let centerVS = (viewMat * vec4f(light.pos, 1.0)).xyz;
