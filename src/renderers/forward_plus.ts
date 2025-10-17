@@ -93,7 +93,7 @@ export class ForwardPlusRenderer extends renderer.Renderer {
             fragment: {
                 module: renderer.device.createShaderModule({
                     label: "naive frag shader",
-                    code: shaders.debugClusterIdFragSrc,
+                    code: shaders.forwardPlusFragSrc,
                 }),
                 targets: [
                     {

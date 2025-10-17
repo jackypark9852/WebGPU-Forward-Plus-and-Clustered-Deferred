@@ -69,20 +69,49 @@ fn heatmap_gyr(t_raw: f32) -> vec3f {
 }
 
 
+// @fragment
+// fn main(in: FragmentInput) -> @location(0) vec4f {
+//     let dims = CLUSTER_DIMS;
+//     let N    = clusterCount();
+
+//     // Reconstruct view-space position at this fragment:
+//     // in.fragPos.xy = pixel coords; in.fragPos.z = post-projection depth [0,1]
+    
+//     let cidLinear = getClusterIndex(in.fragPos.xyz, dims);
+//     let numLights = clusterSet.clusters[cidLinear].numLights;
+
+//     // let t = saturate(f32(numLights) / 100.0);   // cap at 50
+//     // let col = heatmap_gyr(t); 
+
+
+//     let t = saturate(f32(numLights) / 5.0) ;
+//     let col = vec3f(t, t, t);
+
+//     return vec4f(col, 1.0);
+// }
+
+
+const RAINBOW : array<vec3f, 6> = array<vec3f, 6>(
+    vec3f(1.0, 0.0, 0.0), // 0: red
+    vec3f(1.0, 0.5, 0.0), // 1: orange
+    vec3f(1.0, 1.0, 0.0), // 2: yellow
+    vec3f(0.0, 1.0, 0.0), // 3: green
+    vec3f(0.0, 0.0, 1.0), // 4: blue
+    vec3f(0.56, 0.0, 1.0) // 5: violet
+);
+
 @fragment
 fn main(in: FragmentInput) -> @location(0) vec4f {
     let dims = CLUSTER_DIMS;
-    let N    = clusterCount();
-
-    // Reconstruct view-space position at this fragment:
-    // in.fragPos.xy = pixel coords; in.fragPos.z = post-projection depth [0,1]
-    
     let cidLinear = getClusterIndex(in.fragPos.xyz, dims);
-    let numLights = clusterSet.clusters[cidLinear].numLights;
+    let numLights = clusterSet.clusters[cidLinear].numLights; // u32
 
-    let cap = 2048.0; 
-    let t = saturate(f32(numLights) / cap);
-    let col = heatmap_gyr(t);
+    var col: vec3f;
+    if (numLights <= 5u) {
+        col = RAINBOW[numLights];
+    } else {
+        col = vec3f(1.0, 0.0, 1.0); // magenta for 6+
+    }
 
     return vec4f(col, 1.0);
 }

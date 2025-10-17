@@ -46,10 +46,10 @@ export const constants = {
     lightRadius: 2,
 
     // cluster settings
-    clusterDimX: 16,  
-    clusterDimY: 8,
-    clusterDimZ: 32,  
-    clusterCount: 4096,
+    clusterDimX: 2,  
+    clusterDimY: 2,
+    clusterDimZ: 4,  
+    clusterCount: 16,
     maxNumLightPerCluster: 2048
 }
 

@@ -55,6 +55,7 @@ fn hashColor3(n: u32) -> vec3f {
   return vec3f(hashFloat01(n), hashFloat01(n ^ 0x68E31DA4u), hashFloat01(n ^ 0xB5297A4Du));
 }
 
+/*
 @fragment
 fn main(in: FragmentInput) -> @location(0) vec4f {
     let dims = CLUSTER_DIMS;
@@ -75,4 +76,25 @@ fn main(in: FragmentInput) -> @location(0) vec4f {
     let nz = (f32(cid.z) + 0.5) / max(1.0, f32(dims.z));
 
     return vec4f(nx, ny, nz, 1.0);
+}
+*/
+
+@fragment
+fn main(in: FragmentInput) -> @location(0) vec4f {
+    let dims = CLUSTER_DIMS;
+    let cid = unflatten1D(getClusterIndex(in.fragPos.xyz, dims)); // vec3<u32>
+
+    // normalized z in [0,1]
+    let zn = (f32(cid.z) + 0.5) / max(1.0, f32(dims.z));
+
+    // map to [0,3] then brightness = 1 - depth/3 (so 3 -> black)
+    let depth3 = clamp(3.0 * zn, 0.0, 3.0);
+    let brightness = clamp(1.0 - depth3 / 3.0, 0.0, 1.0);
+
+    // x-slice colors: 0 -> red, 1 -> green, others -> black
+    let isX0 = select(0.0, 1.0, cid.x == 0u);
+    let isX1 = select(0.0, 1.0, cid.x == 1u);
+    let base = vec3<f32>(isX0, isX1, 0.0);
+
+    return vec4f(base * brightness, 1.0);
 }

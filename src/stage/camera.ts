@@ -16,15 +16,14 @@ class CameraUniforms {
         }
     }
 
-    readonly invProjOffset = 64; 
+    readonly invProjOffset = 16; 
     set invProjMat(mat: Float32Array) {
         for (let i = 0; i < this.elemCount; ++i) {
-            // BUG: reads from mat[16+i] but mat has only 16 elements (0..15)
             this.floatView[this.invProjOffset + i] = mat[i];
         }
     }
 
-    readonly viewOffset = 128;
+    readonly viewOffset = 32;
     set viewMat(mat: Float32Array) {
         for (let i = 0; i < this.elemCount; ++i) {
             this.floatView[this.viewOffset + i] = mat[i];

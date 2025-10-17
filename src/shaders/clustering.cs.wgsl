@@ -72,6 +72,22 @@ fn testSphereAABB(center: vec3f, radius: f32, aabbMin: vec3f, aabbMax: vec3f) ->
   return distSq <= radius * radius;
 }
 
+fn screen2View(screen: vec4f , screenWH: vec2f) -> vec4f {
+    //Convert to NDC
+    let texCoord = screen.xy / screenWH.xy;
+
+    //Convert to clipSpace
+    let clip = vec4f(vec2f(texCoord.x, 1.0 - texCoord.y)* 2.0 - 1.0, screen.z, screen.w);
+
+    //View space transform
+    var view = cameraUniforms.invProjMat * clip;
+
+    //Perspective projection
+    view = view / view.w;
+
+    return view;
+}
+
 @compute
 @workgroup_size(${clusterWorkgroupSize})
 fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
@@ -98,8 +114,8 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     let minPoint_sS = vec4f(vec2f(cx_f, cy_f) * tileSizePx, -1.0, 1.0); // Bottom left
 
     // find min and max in view space
-    let maxPoint_vS = screenToView(maxPoint_sS.xy, -1, cameraUniforms.invProjMat, screenWH).xyz;
-    let minPoint_vS = screenToView(minPoint_sS.xy, -1, cameraUniforms.invProjMat, screenWH).xyz;
+    let maxPoint_vS = screen2View(maxPoint_sS, screenWH).xyz;
+    let minPoint_vS = screen2View(minPoint_sS, screenWH).xyz;
 
     // tile z-near and z-far
     let tileNearFar = sliceNearFarExp(zNear, zFar, cz, dims.z);
