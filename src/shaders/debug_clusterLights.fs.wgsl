@@ -80,9 +80,9 @@ fn main(in: FragmentInput) -> @location(0) vec4f {
     let cidLinear = getClusterIndex(in.fragPos.xyz, dims);
     let numLights = clusterSet.clusters[cidLinear].numLights;
 
-    // let t = saturate(f32(numLights) / 100.0);   // cap at 50
-    // let col = heatmap_gyr(t);
-    let t = saturate(f32(numLights) / 1.0) ;
-    let col = vec3f(t, t, t);
+    let cap = 2048.0; 
+    let t = saturate(f32(numLights) / cap);
+    let col = heatmap_gyr(t);
+
     return vec4f(col, 1.0);
 }

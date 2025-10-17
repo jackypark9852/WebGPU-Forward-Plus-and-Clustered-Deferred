@@ -189,9 +189,16 @@ export class Lights {
         device.queue.writeBuffer(this.lightSetStorageBuffer, 0, new Uint32Array([this.numLights]));
     }
 
+    // create and run cluster compute pass
     doLightClustering(encoder: GPUCommandEncoder) {
-        // TODO-2: run the light clustering compute pass(es) here
-        // implementing clustering here allows for reusing the code in both Forward+ and Clustered Deferred
+        const computePass = encoder.beginComputePass();
+        computePass.setPipeline(this.clusterComputePipeline);
+        computePass.setBindGroup(shaders.constants.bindGroup_cluster, this.clusterComputeBindGroup); 
+        const clusterWorkgroupCount = Math.ceil(
+            Lights.numClusters / shaders.constants.clusterWorkgroupSize
+        ); 
+        computePass.dispatchWorkgroups(clusterWorkgroupCount);
+        computePass.end();
     }
 
     // CHECKITOUT: this is where the light movement compute shader is dispatched from the host
@@ -200,20 +207,12 @@ export class Lights {
 
         // not using same encoder as render pass so this doesn't interfere with measuring actual rendering performance
         const encoder = device.createCommandEncoder();
-
         const computePass = encoder.beginComputePass();
 
         computePass.setPipeline(this.moveLightsComputePipeline);
         computePass.setBindGroup(shaders.constants.bindGroup_moveLights, this.moveLightsComputeBindGroup);
         const moveLightsWorkgroupCount = Math.ceil(this.numLights / shaders.constants.moveLightsWorkgroupSize);
         computePass.dispatchWorkgroups(moveLightsWorkgroupCount);
-
-        computePass.setPipeline(this.clusterComputePipeline);
-        computePass.setBindGroup(shaders.constants.bindGroup_cluster, this.clusterComputeBindGroup); 
-        const clusterWorkgroupCount = Math.ceil(
-            Lights.numClusters / shaders.constants.clusterWorkgroupSize
-        ); 
-        computePass.dispatchWorkgroups(clusterWorkgroupCount);
 
         computePass.end();
         device.queue.submit([encoder.finish()]);
