@@ -44,22 +44,6 @@ fn intersectZ(eye: vec3f, cornerVS: vec3f, zPlane: f32) -> vec3f {
   return eye + t * ab;
 }
 
-
-// exponential slicing
-fn sliceNearFarExp(zNear: f32, zFar: f32, sliceIdx: u32, sliceCount: u32) -> vec2<f32> {
-  // guard against 0
-  let count = max(sliceCount, 1u);
-
-  let k = zFar / zNear;
-  let a = f32(sliceIdx)       / f32(count);
-  let b = f32(sliceIdx + 1u)  / f32(count);
-
-  // View-space z (negative forward)
-  let zNearSlice = -zNear * pow(k, a);
-  let zFarSlice  = -zNear * pow(k, b);
-  return vec2<f32>(zNearSlice, zFarSlice);
-}
-
 fn sqDistPointAABB(p: vec3f, bmin: vec3f, bmax: vec3f) -> f32 {
   let q  = clamp(p, bmin, bmax);
   let v  = p - q;
@@ -119,15 +103,10 @@ fn main(@builtin(global_invocation_id) globalIdx: vec3u) {
     let minPoint_vS = screen2View(minPoint_sS, screenWH).xyz;
 
     // tile z-near and z-far
-    // let tileNearFar = sliceNearFarExp(zNear, zFar, cz, dims.z);
     let tileNear  = -zNear * pow(zFar/ zNear, cz_f/ f32(dims.z));
     let tileFar   = -zNear * pow(zFar/ zNear, cz_f + 1) /f32(dims.z);
 
     // find min/max points on tile near/far
-    // let minPointNear = minPoint_vS * (tileNearFar.x / minPoint_vS.z);
-    // let minPointFar  = minPoint_vS * (tileNearFar.y / minPoint_vS.z);
-    // let maxPointNear = maxPoint_vS * (tileNearFar.x / maxPoint_vS.z);
-    // let maxPointFar  = maxPoint_vS * (tileNearFar.y / maxPoint_vS.z);
     let minPointNear = minPoint_vS * (tileNear / minPoint_vS.z);
     let minPointFar  = minPoint_vS * (tileFar / minPoint_vS.z);
     let maxPointNear = maxPoint_vS * (tileNear / maxPoint_vS.z);
