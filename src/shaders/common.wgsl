@@ -34,6 +34,11 @@ struct CameraUniforms {
     sliceB: f32,
 };
 
+const dimX = 16; 
+const dimY = 10; 
+const dimZ = 32; 
+
+
 // CHECKITOUT: this special attenuation function ensures lights don't affect geometry outside the maximum light radius
 fn rangeAttenuation(distance: f32) -> f32 {
     return clamp(1.f - pow(distance / 2.f /*lightRadius*/, 4.f), 0.f, 1.f) / (distance * distance);
@@ -54,22 +59,22 @@ fn divRem(n: u32, d: u32) -> vec2<u32> {
 }
 
 fn flatten3D(ix: u32, iy: u32, iz: u32) -> u32 {
-  return ix + ${clusterDimX} * (iy + ${clusterDimY} * iz);
+  return ix + dimX * (iy + dimY * iz);
 }
 
-const CLUSTER_DIMS : vec3<u32> = vec3u(${clusterDimX}u, ${clusterDimY}u, ${clusterDimZ}u);
+const CLUSTER_DIMS : vec3<u32> = vec3u(dimX, dimY, dimZ);
 
 fn clusterCount() -> u32 {
-  return ${clusterDimX} * ${clusterDimY} * ${clusterDimZ}; 
+  return dimX * dimY * dimZ; 
 }
 
 fn unflatten1D(i: u32) -> vec3<u32> {
   // i = x + X*(y + Y*z)
-  let qx_rx = divRem(i, ${clusterDimX});
+  let qx_rx = divRem(i, dimX);
   let qx = qx_rx.x;    // y + Y*z
   let x  = qx_rx.y;
 
-  let qy_ry = divRem(qx, ${clusterDimY});
+  let qy_ry = divRem(qx, dimY);
   let z  = qy_ry.x;
   let y  = qy_ry.y;
 
