@@ -14,7 +14,7 @@ fn getDepthSlice(zView: f32) -> u32 {
     let s = floor(cameraUniforms.sliceA * log(-zView) - cameraUniforms.sliceB);
 
     // clamp to valid slice range
-    let sClamped = clamp(s, 0.0, f32(${clusterDimZ} - 1u));
+    let sClamped = clamp(s, 0.0, f32(dimZ - 1u));
     return u32(sClamped);
 }
 
@@ -33,9 +33,9 @@ fn getClusterIndex(
     let clipZ     = depthToClipZ(pixelCoord.z);
     let posVS     = screenToView(pixelCoord.xy, clipZ, invProj, screenWH);
 
-    let cz: u32 = clamp(getDepthSlice(posVS.z), 0u, ${clusterDimZ} - 1u);
-    let cx: u32 = clamp(u32(pixelCoord.x / tileSizePx.x), 0u, ${clusterDimX} - 1u);
-    let cy: u32 = clamp(u32(pixelCoord.y / tileSizePx.y), 0u, ${clusterDimY} - 1u);
+    let cz: u32 = clamp(getDepthSlice(posVS.z), 0u, dimZ - 1u);
+    let cx: u32 = clamp(u32(pixelCoord.x / tileSizePx.x), 0u, 16 - 1u);
+    let cy: u32 = clamp(u32(pixelCoord.y / tileSizePx.y), 0u, dimY - 1u);
 
     return flatten3D(cx, cy, cz);
 }
