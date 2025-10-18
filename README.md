@@ -10,9 +10,12 @@
 
 This project uses WebGPU to implement Naive, Forward+, and Clustered Deferred renderers. 
 
+### Live Demo
+[GitHub Pages Link](https://jackypark9852.github.io/WebGPU-Forward-Plus-and-Clustered-Deferred/)
+
 ### Demo Video/GIF
 
-[![](img/demo.gif)]
+![](img/demo.gif)
 
 ## Algorithm Overview
 ### Naive Implementation 
