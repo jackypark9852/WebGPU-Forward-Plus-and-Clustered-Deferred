@@ -35,8 +35,12 @@ export const constants = {
     // move light compute pass bindings
     bindGroup_moveLights: 0,
 
-    // cluster compute pass bindings
+    // forward+  specific bindgroups
     bindGroup_cluster: 0, 
+
+    // cluster deferred specific bindgroups 
+    bindGroup_gBuffer: 0, 
+    bindGroup_fullScreen: 0, 
 
     // compute work group sizes
     moveLightsWorkgroupSize: 128,

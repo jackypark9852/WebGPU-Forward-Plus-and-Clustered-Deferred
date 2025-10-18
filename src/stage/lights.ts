@@ -216,5 +216,5 @@ export class Lights {
 
         computePass.end();
         device.queue.submit([encoder.finish()]);
-    }
+    }   
 }

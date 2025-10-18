@@ -20,6 +20,11 @@ fn getDepthSlice(zView: f32) -> u32 {
     return u32(sClamped);
 }
 
+fn depthToClipZ(d: f32) -> f32 {
+    return d * 2.0 - 1.0;
+}
+
+
 fn getClusterIndex(
   pixelCoord : vec3f, 
   dims       : vec3u
@@ -35,37 +40,6 @@ fn getClusterIndex(
     let cy: u32 = clamp(u32(pixelCoord.y / tileSizePx.y), 0u, ${clusterDimY} - 1u);
 
     return flatten3D(cx, cy, cz);
-}
-
-fn depthToClipZ(d: f32) -> f32 {
-    return d * 2.0 - 1.0;
-}
-
-fn hashFloat01(n: u32) -> f32 {
-  var x = n;
-  x ^= x >> 17; x *= 0xED5AD4BBu;
-  x ^= x >> 11; x *= 0xAC4C1B51u;
-  x ^= x >> 15; x *= 0x31848BABu;
-  x ^= x >> 14;
-  // 0..1
-  return f32(x) / f32(0xFFFFFFFFu);
-}
-
-fn hashColor3(n: u32) -> vec3f {
-  return vec3f(hashFloat01(n), hashFloat01(n ^ 0x68E31DA4u), hashFloat01(n ^ 0xB5297A4Du));
-}
-
-fn saturate(x: f32) -> f32 { return clamp(x, 0.0, 1.0); }
-
-fn heatmap_gyr(t_raw: f32) -> vec3f {
-  let t = saturate(t_raw);
-  if (t < 0.5) {
-    let u = t * 2.0;
-    return mix(vec3f(0.0, 1.0, 0.0), vec3f(1.0, 1.0, 0.0), u);
-  } else {
-    let u = (t - 0.5) * 2.0;
-    return mix(vec3f(1.0, 1.0, 0.0), vec3f(1.0, 0.0, 0.0), u);
-  }
 }
 
 
